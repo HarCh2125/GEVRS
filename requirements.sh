@@ -1,0 +1,1 @@
+pip install networkx torch torch-geometric pyvis matplotlib
