@@ -5,6 +5,19 @@ import torchvision.transforms as T
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import networkx as nx
+
+COCO_INSTANCE_CATEGORY_NAMES = [
+'__background__', 'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck',
+'boat', 'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat',
+'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella',
+'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat',
+'baseball glove', 'skateboard', 'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup', 'fork',
+'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog',
+'pizza', 'donut', 'cake', 'chair', 'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv',
+'laptop', 'mouse', 'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink',
+'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush'
+]
 
 def load_image(image_path):
     image = cv2.imread(image_path)
@@ -12,7 +25,7 @@ def load_image(image_path):
     return image
 
 def preprocess_image(image):
-
+    
     transform = T.Compose([
         T.ToTensor(),
     ])
@@ -20,18 +33,7 @@ def preprocess_image(image):
     return tensor_image
 
 def plot_detections(image, predictions):
-    COCO_INSTANCE_CATEGORY_NAMES = [
-    '__background__', 'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck',
-    'boat', 'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat',
-    'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella',
-    'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat',
-    'baseball glove', 'skateboard', 'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup', 'fork',
-    'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog',
-    'pizza', 'donut', 'cake', 'chair', 'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv',
-    'laptop', 'mouse', 'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink',
-    'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush'
-    ]
-
+    
     # Plot the bounding boxes and masks on the image
 
     boxes = predictions['boxes'].cpu().numpy()
@@ -60,4 +62,25 @@ def plot_detections(image, predictions):
     plt.figure(figsize=(10, 10))
     plt.imshow(image)
     plt.axis('off')
+    plt.show()
+
+def visualize_graph_on_image(G, image_path):
+    img = cv2.imread(image_path)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    plt.imshow(img)
+    image_shape = img.shape
+
+    pos = {}
+    for node in G.nodes(data = True):
+        bbox = node[1]['bbox']
+
+        # Calculate the node position as the center of the bounding box
+        x_center = (bbox[0] + bbox[2]) / 2
+        y_center = (bbox[1] + bbox[3]) / 2
+        # Normalise now
+        # pos = nx.spring_layout(G, pos = pos, k = 0.1)
+        pos[node[0]] = (x_center, y_center * 1.1)
+
+    nx.draw(G, pos, with_labels = True, node_color = 'skyblue', node_size = 300, font_size = 8, edge_color = 'gray', width = 0.5)
+
     plt.show()
